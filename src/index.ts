@@ -14,7 +14,7 @@ import { getAlerts } from "./alerts";
 import { serverMappings } from "./config";
 import { updateChannelName } from "./discord";
 import { getLockStates } from "./locks";
-import { getPopulation } from "./population";
+import { getAllPopulations, getPopulation } from "./population";
 import { serverListingContinents, serverListingPopulation } from "./strings";
 
 export interface Env {
@@ -61,6 +61,12 @@ export default {
       ctx.waitUntil(runUpdate(env));
       return new Response("ok");
     } else {
+      if (request.url.includes("/x/debug-population")) {
+        const parts = request.url.split("/");
+        const serverID = parts[parts.length - 1];
+        const population = await getAllPopulations(serverID);
+        return new Response(JSON.stringify(population));
+      }
       return new Response("not ok", { status: 400 });
     }
   },
