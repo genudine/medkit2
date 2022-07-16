@@ -18,9 +18,6 @@ import { getPopulation } from "./population";
 import { serverListingContinents, serverListingPopulation } from "./strings";
 
 export interface Env {
-  // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-  // MY_KV_NAMESPACE: KVNamespace;
-  SERVER_MAPPINGS: string;
   SERVICE_ID: string;
   BOT_TOKEN: string;
   PUSH_KEY: string;
@@ -33,7 +30,7 @@ const runUpdate = async (env: Env) => {
   for (const [serverID, channelIDs] of Object.entries(serverMappings)) {
     // Get population, alerts, and locks.
     const population = await getPopulation(serverID);
-    const alerts = await getAlerts(serverID);
+    const alerts = await getAlerts(serviceID, serverID);
     const locks = await getLockStates(serviceID, serverID);
 
     const popListing = serverListingPopulation(serverID, population);
@@ -60,10 +57,7 @@ export default {
     await runUpdate(env);
   },
   async fetch(request: Request, env: Env, ctx: FetchEvent): Promise<Response> {
-    if (!env.PUSH_KEY) {
-      return new Response("Push key not set", { status: 400 });
-    }
-    if (request.url.includes(env.PUSH_KEY)) {
+    if (env.PUSH_KEY && request.url.includes(env.PUSH_KEY)) {
       ctx.waitUntil(runUpdate(env));
       return new Response("ok");
     } else {

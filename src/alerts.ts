@@ -1,23 +1,24 @@
+import { metagameIDs } from "./metagame.gen";
 import { AlertType, Continent } from "./types";
 
-type AlertResponse = AlertResponseItem[];
-
-interface AlertResponseItem {
-  endDate: string;
-  metagameEventId: string;
-  metagameEvent: {
-    type: number;
-  };
-  world: number;
-  zone: Continent;
-}
+type AlertResponse = {
+  world_event_list: {
+    instance_id: string;
+    metagame_event_state_name: "started" | "ended";
+    zone_id: string;
+    metagame_event_id: string;
+  }[];
+};
 
 export type Alerts = Record<Continent, AlertType>;
 
-// Get alerts from PS2Alerts
-export const getAlerts = async (worldID: string): Promise<Alerts> => {
+// Get alerts from Census
+export const getAlerts = async (
+  serviceID: string,
+  worldID: string
+): Promise<Alerts> => {
   const req = await fetch(
-    `https://api.ps2alerts.com/instances/active?sortBy=timeStarted&world=${worldID}`
+    `https://census.daybreakgames.com/s:${serviceID}/get/ps2:v2/world_event?type=METAGAME&world_id=${worldID}`
   );
   const data: AlertResponse = await req.json();
 
@@ -29,22 +30,28 @@ export const getAlerts = async (worldID: string): Promise<Alerts> => {
     [Continent.Oshur]: AlertType.None,
   };
 
-  data.forEach((alert) => {
-    alertStates[alert.zone] = AlertType.Conquest;
+  const activeAlerts = data.world_event_list.reduceRight<
+    { metagame_event_id: string; zone_id: string; instance_id: string }[]
+  >((acc, event) => {
+    // for every start, add to the list
+    // for every end, remove from the list
+    if (event.metagame_event_state_name === "started") {
+      acc = [...acc, event];
+      console.log("started", { event });
+    } else {
+      acc = acc.filter((v) => v.instance_id !== event.instance_id);
+      console.log("ended", { event });
+    }
+
+    return acc;
+  }, []);
+
+  console.log({ activeAlerts });
+  activeAlerts.forEach((alert) => {
+    alertStates[Number(alert.zone_id) as Continent] =
+      metagameIDs[alert.metagame_event_id as keyof typeof metagameIDs] ||
+      AlertType.Conquest;
   });
 
   return alertStates;
-};
-
-const detectAlertType = (alert: AlertResponseItem): AlertType => {
-  switch (alert.metagameEvent?.type) {
-    case 9:
-      return AlertType.Conquest;
-    case 6:
-      return AlertType.Max;
-    case 10:
-      return AlertType.Air;
-    default:
-      return AlertType.Conquest;
-  }
 };
