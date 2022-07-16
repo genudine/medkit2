@@ -3,7 +3,7 @@ main = "src/index.ts"
 compatibility_date = "2022-07-16"
 
 [triggers]
-crons = [ "*/5 * * * *" ]
+crons = [ "*/10 * * * *" ]
 
 [vars]
 SERVICE_ID = "medkit2"
