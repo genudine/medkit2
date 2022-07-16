@@ -43,6 +43,6 @@ This may not always keep up with the actual map (like Esamir), so a potential fo
 
 [See code](./src/alerts.ts)
 
-Pulls world_events with type `METAGAME` from Census API; distinctly not joining with the metagame_events table. Instead, we codegen the known alert types, Conquest, Max, and Air, by their metagame_events type via [codegen](./hack/codegen-metagame.js). Both of these considerations are due to Census API missing Oshur data.
+Pulls world_events with type `METAGAME` from Census API; distinctly not joining with the metagame_events table. Instead, we match the known alert types, Conquest, Max, and Air, by their metagame_events type via [codegen](./hack/codegen-metagame.js). Both of these considerations are due to Census API missing Oshur data.
 
-Census will report alerts in the order they both started and ended, we build an array of active events, and remove them when the `instance_id` matches another that ended.
+Census will report alerts in the order they both started and ended, we build an array of active events going from the bottom to the top of the list, and remove them when the `instance_id` matches another that ended.
