@@ -1,0 +1,16 @@
+{
+  "name": "medkit2",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:kayteh/medkit2.git",
+  "author": "Katalina Okano <git@kat.cafe>",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "@cloudflare/workers-types": "^3.14.1",
+    "prettier": "^2.7.1",
+    "prettier-plugin-organize-imports": "^3.0.0",
+    "typescript": "^4.7.4",
+    "wrangler": "^2.0.22"
+  }
+}
