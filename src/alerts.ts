@@ -8,15 +8,16 @@ interface AlertResponseItem {
   metagameEvent: {
     type: number;
   };
-  zoneId: Continent;
+  world: number;
+  zone: Continent;
 }
 
 export type Alerts = Record<Continent, AlertType>;
 
-// Get alerts from Voidwell, filter the API result by end dates that haven't occurred yet.
+// Get alerts from PS2Alerts
 export const getAlerts = async (worldID: string): Promise<Alerts> => {
   const req = await fetch(
-    `https://api.voidwell.com/ps2/alert/alerts/0?worldId=${worldID}&platform=pc`
+    `https://api.ps2alerts.com/instances/active?sortBy=timeStarted&world=${worldID}`
   );
   const data: AlertResponse = await req.json();
 
@@ -28,11 +29,9 @@ export const getAlerts = async (worldID: string): Promise<Alerts> => {
     [Continent.Oshur]: AlertType.None,
   };
 
-  data
-    .filter((alert) => new Date() < new Date(alert.endDate))
-    .forEach((alert) => {
-      alertStates[alert.zoneId] = detectAlertType(alert);
-    });
+  data.forEach((alert) => {
+    alertStates[alert.zone] = AlertType.Conquest;
+  });
 
   return alertStates;
 };
