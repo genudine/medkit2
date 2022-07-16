@@ -44,7 +44,9 @@ const runUpdate = async (env: Env) => {
     // Update the server listings
     for (const [popChannel, contChannel] of channelIDs) {
       await updateChannelName(botToken, popChannel, popListing);
-      await updateChannelName(botToken, contChannel, contListing);
+      if (contChannel) {
+        await updateChannelName(botToken, contChannel, contListing);
+      }
     }
   }
 };
