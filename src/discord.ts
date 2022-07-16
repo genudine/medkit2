@@ -12,5 +12,9 @@ export const updateChannelName = async (
     body: JSON.stringify({ name }),
   });
 
+  if (req.status !== 200) {
+    throw new Error(`Failed to update channel name: ${req.status}`);
+  }
+
   console.log({ json: await req.json() });
 };

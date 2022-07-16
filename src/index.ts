@@ -11,6 +11,7 @@
  */
 
 import { getAlerts } from "./alerts";
+import { serverMappings } from "./config";
 import { updateChannelName } from "./discord";
 import { getLockStates } from "./locks";
 import { getPopulation } from "./population";
@@ -22,11 +23,31 @@ export interface Env {
   SERVER_MAPPINGS: string;
   SERVICE_ID: string;
   BOT_TOKEN: string;
+  PUSH_KEY: string;
 }
 
-interface ServerMappings {
-  [serverID: string]: [string, string][]; // emerald# to [pop, cont] channel IDs
-}
+const runUpdate = async (env: Env) => {
+  const serviceID = env.SERVICE_ID;
+  const botToken = env.BOT_TOKEN;
+
+  for (const [serverID, channelIDs] of Object.entries(serverMappings)) {
+    // Get population, alerts, and locks.
+    const population = await getPopulation(serverID);
+    const alerts = await getAlerts(serverID);
+    const locks = await getLockStates(serviceID, serverID);
+
+    const popListing = serverListingPopulation(serverID, population);
+    const contListing = serverListingContinents(serverID, alerts, locks);
+
+    console.log("Sending", { popListing, contListing });
+
+    // Update the server listings
+    for (const [popChannel, contChannel] of channelIDs) {
+      await updateChannelName(botToken, popChannel, popListing);
+      await updateChannelName(botToken, contChannel, contListing);
+    }
+  }
+};
 
 export default {
   async scheduled(
@@ -34,26 +55,17 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<void> {
-    const serverMappings: ServerMappings = JSON.parse(env.SERVER_MAPPINGS);
-    const serviceID = env.SERVICE_ID;
-    const botToken = env.BOT_TOKEN;
-
-    Object.entries(serverMappings).forEach(async ([serverID, channelIDs]) => {
-      // Get population, alerts, and locks.
-      const population = await getPopulation(serverID);
-      const alerts = await getAlerts(serverID);
-      const locks = await getLockStates(serviceID, serverID);
-
-      const popListing = serverListingPopulation(serverID, population);
-      const contListing = serverListingContinents(serverID, alerts, locks);
-
-      console.log("Sending", { popListing, contListing });
-
-      // Update the server listings
-      channelIDs.forEach(async ([popChannel, contChannel]) => {
-        await updateChannelName(botToken, popChannel, popListing);
-        await updateChannelName(botToken, contChannel, contListing);
-      });
-    });
+    await runUpdate(env);
+  },
+  async fetch(request: Request, env: Env, ctx: FetchEvent): Promise<Response> {
+    if (!env.PUSH_KEY) {
+      return new Response("Push key not set", { status: 400 });
+    }
+    if (request.url.includes(env.PUSH_KEY)) {
+      ctx.waitUntil(runUpdate(env));
+      return new Response("ok");
+    } else {
+      return new Response("not ok", { status: 400 });
+    }
   },
 };
