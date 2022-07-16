@@ -8,7 +8,7 @@ const serverNames = {
   "13": "🏰 Cobalt",
   "1": "🍳 Connery",
   "17": "💎 Emerald",
-  "19": "Jaeger",
+  "19": "🚌 Jaeger",
   "10": "🍺 Miller",
   "40": "👺 SolTech",
 };
