@@ -11,7 +11,11 @@
  */
 
 import { getAlerts } from "./alerts";
-import { serverMappings } from "./config";
+import {
+  getPlatformConfig,
+  serverMappings,
+  updateTimeMappings,
+} from "./config";
 import { updateChannelName } from "./discord";
 import { getLockStates } from "./locks";
 import { getAllPopulations, getPopulation } from "./population";
@@ -28,13 +32,20 @@ const runUpdate = async (env: Env) => {
   const botToken = env.BOT_TOKEN;
 
   for (const [serverID, channelIDs] of Object.entries(serverMappings)) {
+    const platformConfig = getPlatformConfig(serverID);
+
     // Get population, alerts, and locks.
-    const population = await getPopulation(serverID);
-    const alerts = await getAlerts(serviceID, serverID);
-    const locks = await getLockStates(serviceID, serverID);
+    const population = await getPopulation(serverID, platformConfig);
+    const alerts = await getAlerts(serviceID, serverID, platformConfig);
+    const locks = await getLockStates(serviceID, serverID, platformConfig);
 
     const popListing = serverListingPopulation(serverID, population);
-    const contListing = serverListingContinents(serverID, alerts, locks);
+    const contListing = serverListingContinents(
+      serverID,
+      alerts,
+      locks,
+      population
+    );
 
     console.log("Sending", { popListing, contListing });
 
@@ -45,6 +56,23 @@ const runUpdate = async (env: Env) => {
         await updateChannelName(botToken, contChannel, contListing);
       }
     }
+  }
+
+  await doUpdateTime(botToken);
+};
+
+const doUpdateTime = async (botToken: string) => {
+  // Send update time
+  const humanDate = new Date().toLocaleString("en-GB", {
+    timeZone: "UTC",
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  const updateTimeText = `@ ${humanDate} UTC`;
+  console.log("Sending", { updateTimeText });
+
+  for (const channelID of updateTimeMappings) {
+    await updateChannelName(botToken, channelID, updateTimeText);
   }
 };
 
@@ -61,12 +89,38 @@ export default {
       ctx.waitUntil(runUpdate(env));
       return new Response("ok");
     } else {
+      const parts = request.url.split("/");
+      const serverID = parts[parts.length - 1];
+      const platformConfig = getPlatformConfig(serverID);
+
       if (request.url.includes("/x/debug-population")) {
-        const parts = request.url.split("/");
-        const serverID = parts[parts.length - 1];
-        const population = await getAllPopulations(serverID);
+        const population = await getAllPopulations(serverID, platformConfig);
         return new Response(JSON.stringify(population));
       }
+
+      if (request.url.includes("/x/debug-alerts")) {
+        const alerts = await getAlerts(
+          env.SERVICE_ID,
+          serverID,
+          platformConfig
+        );
+        return new Response(JSON.stringify(alerts));
+      }
+
+      if (request.url.includes("/x/debug-locks")) {
+        const locks = await getLockStates(
+          env.SERVICE_ID,
+          serverID,
+          platformConfig
+        );
+        return new Response(JSON.stringify(locks));
+      }
+
+      if (request.url.includes("/x/bump-update-time")) {
+        await doUpdateTime(env.BOT_TOKEN);
+        return new Response("ok");
+      }
+
       return new Response("not ok", { status: 400 });
     }
   },

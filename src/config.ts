@@ -18,4 +18,48 @@ export const serverMappings = {
   "40": [
     ["997765531341967470", "997765553928286319"], // PS2 Discord
   ],
+  "1000": [
+    ["997936799823446089", "997936830303457280"], // PS2 Discord
+  ],
+  "2000": [
+    ["997936745117126677", "997936773218975884"], // PS2 Discord
+  ],
+};
+
+export const updateTimeMappings = [
+  "997953082669412482", // PS2 Discord
+];
+
+export const platformConfig = {
+  pc: {
+    fisuSubdomain: "ps2",
+    voidwellPlatform: "pc",
+    honuAvailable: true,
+    censusCollection: "ps2:v2",
+  },
+  ps4us: {
+    fisuSubdomain: "ps4us.ps2",
+    voidwellPlatform: "ps4us",
+    honuAvailable: false,
+    censusCollection: "ps2ps4us:v2",
+  },
+  ps4eu: {
+    fisuSubdomain: "ps4eu.ps2",
+    voidwellPlatform: "ps4eu",
+    honuAvailable: false,
+    censusCollection: "ps2ps4eu:v2",
+  },
+};
+
+export type PlatformConfig = typeof platformConfig[keyof typeof platformConfig];
+
+export const getPlatformConfig = (serverID: string): PlatformConfig => {
+  switch (serverID) {
+    case "1000":
+      return platformConfig.ps4us;
+    case "2000":
+      return platformConfig.ps4eu;
+    default:
+      return platformConfig.pc;
+  }
 };

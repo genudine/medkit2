@@ -12,11 +12,18 @@ export const metagameIDs = {
 
 const run = async () => {
     // Get the data from the api
-    // TODO: this is incomplete, fetch from somewhere else too.
     const response = await fetch("https://census.daybreakgames.com/s:medkit2/get/ps2:v2/metagame_event/?c:limit=1000");
     const json = await response.json();
 
-    const data = {};
+    const data = {
+        // Oshur pre-fill
+        "222": "AlertType.Conquest",
+        "223": "AlertType.Conquest",
+        "224": "AlertType.Conquest",
+        "226": "AlertType.Conquest",
+        "232": "AlertType.Air",
+        "233": "AlertType.Max",
+    };
 
     // Parse the data
     for (const event of json.metagame_event_list) {

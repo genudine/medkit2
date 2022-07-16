@@ -1,6 +1,7 @@
 name = "medkit2"
 main = "src/index.ts"
 compatibility_date = "2022-07-16"
+usage_model = "unbound"
 
 [triggers]
 crons = [ "*/10 * * * *" ]

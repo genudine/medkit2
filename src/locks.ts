@@ -1,3 +1,4 @@
+import { PlatformConfig } from "./config";
 import { Continent } from "./types";
 
 export type LockStates = {
@@ -20,12 +21,13 @@ interface CensusMapList {
 
 export const getLockStates = async (
   serviceID: string,
-  worldID: string
+  worldID: string,
+  platformConfig: PlatformConfig
 ): Promise<LockStates> => {
   const response = await fetch(
-    `https://census.daybreakgames.com/s:${serviceID}/get/ps2:v2/map/?world_id=${worldID}&zone_ids=${Object.values(
-      Continent
-    ).join(",")}`
+    `https://census.daybreakgames.com/s:${serviceID}/get/${
+      platformConfig.censusCollection
+    }/map/?world_id=${worldID}&zone_ids=${Object.values(Continent).join(",")}`
   );
 
   const data: CensusMapList = await response.json();
@@ -45,8 +47,6 @@ export const getLockStates = async (
       (v) => v === factions[0]
     );
   });
-
-  console.log({ lockStates });
 
   return lockStates;
 };

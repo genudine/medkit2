@@ -1,3 +1,4 @@
+import { PlatformConfig } from "./config";
 import { metagameIDs } from "./metagame.gen";
 import { AlertType, Continent } from "./types";
 
@@ -15,10 +16,11 @@ export type Alerts = Record<Continent, AlertType>;
 // Get alerts from Census
 export const getAlerts = async (
   serviceID: string,
-  worldID: string
+  worldID: string,
+  platformConfig: PlatformConfig
 ): Promise<Alerts> => {
   const req = await fetch(
-    `https://census.daybreakgames.com/s:${serviceID}/get/ps2:v2/world_event?type=METAGAME&world_id=${worldID}`
+    `https://census.daybreakgames.com/s:${serviceID}/get/${platformConfig.censusCollection}/world_event?type=METAGAME&world_id=${worldID}`
   );
   const data: AlertResponse = await req.json();
 
@@ -37,10 +39,8 @@ export const getAlerts = async (
     // for every end, remove from the list
     if (event.metagame_event_state_name === "started") {
       acc = [...acc, event];
-      console.log("started", { event });
     } else {
       acc = acc.filter((v) => v.instance_id !== event.instance_id);
-      console.log("ended", { event });
     }
 
     return acc;

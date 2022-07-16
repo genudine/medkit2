@@ -1,17 +1,30 @@
-export const getPopulation = async (worldID: string): Promise<number> => {
-  return (await getAllPopulations(worldID)).average;
+import { PlatformConfig } from "./config";
+
+export const getPopulation = async (
+  worldID: string,
+  platformConfig: PlatformConfig
+): Promise<number> => {
+  return (await getAllPopulations(worldID, platformConfig)).average;
 };
 
-const getVoidwellPopulation = async (worldID: string): Promise<number> => {
-  const res = await fetch(`https://api.voidwell.com/ps2/worldstate/${worldID}`);
+const getVoidwellPopulation = async (
+  worldID: string,
+  platformConfig: PlatformConfig
+): Promise<number> => {
+  const res = await fetch(
+    `https://api.voidwell.com/ps2/worldstate/${worldID}?platform=${platformConfig.voidwellPlatform}`
+  );
   const data: { onlineCharacters: number } = await res.json();
 
   return data.onlineCharacters;
 };
 
-const getFisuPopulation = async (worldID: string): Promise<number> => {
+const getFisuPopulation = async (
+  worldID: string,
+  platformConfig: PlatformConfig
+): Promise<number> => {
   const res = await fetch(
-    `https://ps2.fisu.pw/api/population/?world=${worldID}`
+    `https://${platformConfig.fisuSubdomain}.fisu.pw/api/population/?world=${worldID}`
   );
   const data: { result: { vs: number; nc: number; tr: number; ns: number }[] } =
     await res.json();
@@ -20,7 +33,14 @@ const getFisuPopulation = async (worldID: string): Promise<number> => {
   return vs + nc + tr + ns;
 };
 
-const getHonuPopulation = async (worldID: string): Promise<number> => {
+const getHonuPopulation = async (
+  worldID: string,
+  platformConfig: PlatformConfig
+): Promise<number> => {
+  if (!platformConfig.honuAvailable) {
+    return -1;
+  }
+
   const res = await fetch(`https://wt.honu.pw/api/population/${worldID}`);
   const data: { total: number } = await res.json();
 
@@ -28,7 +48,8 @@ const getHonuPopulation = async (worldID: string): Promise<number> => {
 };
 
 export const getAllPopulations = async (
-  worldID: string
+  worldID: string,
+  platformConfig: PlatformConfig
 ): Promise<{
   average: number;
   fisu: number;
@@ -36,14 +57,15 @@ export const getAllPopulations = async (
   voidwell: number;
 }> => {
   const values = await Promise.all([
-    getHonuPopulation(worldID).catch(() => -1),
-    getVoidwellPopulation(worldID).catch(() => -1),
-    getFisuPopulation(worldID).catch(() => -1),
+    getHonuPopulation(worldID, platformConfig).catch(() => -1),
+    getVoidwellPopulation(worldID, platformConfig).catch(() => -1),
+    getFisuPopulation(worldID, platformConfig).catch(() => -1),
   ]);
 
   const [honu, voidwell, fisu] = values;
 
-  const workingValues = values.filter((v) => v !== -1);
+  // Both -1 and 0 are bad values.
+  const workingValues = values.filter((v) => v > 0);
 
   return {
     honu,

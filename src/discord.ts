@@ -12,9 +12,14 @@ export const updateChannelName = async (
     body: JSON.stringify({ name }),
   });
 
+  console.log("discord response", await req.json());
+
+  if (req.status === 429) {
+    console.warn("Update for channel", channelID, "failed due to rate limit");
+    return;
+  }
+
   if (req.status !== 200) {
     throw new Error(`Failed to update channel name: ${req.status}`);
   }
-
-  console.log({ json: await req.json() });
 };

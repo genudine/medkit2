@@ -47,4 +47,10 @@ export const metagameIDs = {
   "208": AlertType.Conquest,
   "209": AlertType.Conquest,
   "210": AlertType.Conquest,
+  "222": AlertType.Conquest,
+  "223": AlertType.Conquest,
+  "224": AlertType.Conquest,
+  "226": AlertType.Conquest,
+  "232": AlertType.Air,
+  "233": AlertType.Max,
 };

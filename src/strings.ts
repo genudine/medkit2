@@ -3,14 +3,14 @@ import { LockStates } from "./locks";
 import { AlertType, Continent } from "./types";
 
 const serverNames = {
-  "24": "Apex",
-  "25": "Briggs",
-  "13": "🏰 Cobalt",
-  "1": "🍳 Connery",
-  "17": "💎 Emerald",
-  "19": "🚌 Jaeger",
-  "10": "🍺 Miller",
-  "40": "👺 SolTech",
+  "13": "Cobalt",
+  "1": "Connery",
+  "17": "Emerald",
+  "19": "Jaeger",
+  "10": "Miller",
+  "40": "SolTech",
+  "1000": "Genudine",
+  "2000": "Ceres",
 };
 
 const continentNames = {
@@ -22,33 +22,39 @@ const continentNames = {
 };
 
 const alertTypeEmoji = {
-  [AlertType.Conquest]: " 🚨",
-  [AlertType.Max]: " 🍔",
-  [AlertType.Air]: " ✈️",
-  [AlertType.None]: "",
+  [AlertType.Conquest]: "🚨",
+  [AlertType.Max]: "🍔",
+  [AlertType.Air]: "✈️",
+  [AlertType.None]: " ",
 };
 
 export const serverListingPopulation = (
   serverId: string,
   population: number
 ) => {
-  const serverName: string =
-    serverNames[serverId as any as keyof typeof serverNames];
-  return `${serverName}: ${population} online`;
+  const serverName = serverNames[serverId as any as keyof typeof serverNames];
+
+  if (population < 1) {
+    return `${serverName}｜Offline`;
+  }
+
+  return `${serverName}｜${population} online`;
 };
 
 export const serverListingContinents = (
   serverId: string,
   alerts: Alerts,
-  lockStates: LockStates
+  lockStates: LockStates,
+  population: number
 ) => {
-  const serverName: string =
-    serverNames[serverId as any as keyof typeof serverNames];
+  if (population < 1) {
+    return `···`;
+  }
 
   const continents = Object.keys(continentNames)
-    .filter((id) => lockStates[String(id) as any] === false)
+    .filter((id) => lockStates[Number(id) as keyof typeof lockStates] === false)
     .sort((a, b) => {
-      if (alerts[+a] === AlertType.None) {
+      if (alerts[Number(a) as keyof typeof alerts] === AlertType.None) {
         return 1;
       }
 
@@ -56,8 +62,10 @@ export const serverListingContinents = (
     })
     .map((id) => {
       const intID = Number(id);
-      return `${continentNames[intID]}${alertTypeEmoji[alerts[intID]]}`;
+      return `${alertTypeEmoji[alerts[intID as keyof typeof alerts]]}${
+        continentNames[intID as keyof typeof continentNames]
+      }`;
     });
 
-  return `${continents.join(", ")} 🌐`;
+  return `···${continents.join(",")}`;
 };
