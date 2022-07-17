@@ -35,22 +35,17 @@ export const serverListingPopulation = (
   const serverName = serverNames[serverId as any as keyof typeof serverNames];
 
   if (population < 1) {
-    return `${serverName}｜Offline`;
+    return `${serverName}｜ No players online.`;
   }
 
-  return `${serverName}｜${population} online`;
+  return `${serverName}｜${population || 0} online`;
 };
 
 export const serverListingContinents = (
   serverId: string,
   alerts: Alerts,
-  lockStates: LockStates,
-  population: number
+  lockStates: LockStates
 ) => {
-  if (population < 1) {
-    return `···`;
-  }
-
   const continents = Object.keys(continentNames)
     .filter((id) => lockStates[Number(id) as keyof typeof lockStates] === false)
     .sort((a, b) => {

@@ -4,7 +4,7 @@ export const getPopulation = async (
   worldID: string,
   platformConfig: PlatformConfig
 ): Promise<number> => {
-  return (await getAllPopulations(worldID, platformConfig)).average;
+  return (await getAllPopulations(worldID, platformConfig)).average || 0;
 };
 
 const getVoidwellPopulation = async (
