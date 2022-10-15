@@ -8,3 +8,8 @@ crons = [ "*/10 * * * *" ]
 
 [vars]
 SERVICE_ID = "medkit2"
+
+[[kv_namespaces]]
+binding = "CONFIG"
+id = "e247a266d6f343e4a678a9632f1b14a9"
+preview_id = "56eafbc0347642ed8d265995f9be5d07"

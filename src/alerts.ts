@@ -55,3 +55,11 @@ export const getAlerts = async (
 
   return alertStates;
 };
+
+// Gets all active alerts, we sort by world later.
+export const getActiveAlertStats = async () => {
+  const resp = await fetch(
+    "https://api.ps2alerts.com/instances/active?sortBy=timeStarted"
+  );
+  const data = await resp.json();
+};

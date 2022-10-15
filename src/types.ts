@@ -3,6 +3,7 @@ export enum AlertType {
   Conquest = 9,
   Max = 6,
   Air = 10,
+  SuddenDeath = 1000, // Unknown
 }
 
 export enum Continent {

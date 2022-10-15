@@ -16,18 +16,24 @@ import {
   serverMappings,
   updateTimeMappings,
 } from "./config";
-import { updateChannelName } from "./discord";
+import { updateChannelName, upsertMessage } from "./discord";
 import { getLockStates } from "./locks";
 import { getAllPopulations, getPopulation } from "./population";
-import { serverListingContinents, serverListingPopulation } from "./strings";
+import {
+  serverListingContinents,
+  serverListingPopulation,
+  serverStatsEmbed,
+} from "./strings";
 
 export interface Env {
   SERVICE_ID: string;
   BOT_TOKEN: string;
   PUSH_KEY: string;
+
+  CONFIG: KVNamespace;
 }
 
-const runUpdate = async (env: Env) => {
+const runChannelNameUpdate = async (env: Env) => {
   const serviceID = env.SERVICE_ID;
   const botToken = env.BOT_TOKEN;
 
@@ -40,12 +46,7 @@ const runUpdate = async (env: Env) => {
     const locks = await getLockStates(serviceID, serverID, platformConfig);
 
     const popListing = serverListingPopulation(serverID, population);
-    const contListing = serverListingContinents(
-      serverID,
-      alerts,
-      locks,
-      population
-    );
+    const contListing = serverListingContinents(serverID, alerts, locks);
 
     console.log("Sending", { popListing, contListing });
 
@@ -76,17 +77,19 @@ const doUpdateTime = async (botToken: string) => {
   }
 };
 
+const runInteractions = async (env: Env) => {};
+
 export default {
   async scheduled(
     controller: ScheduledController,
     env: Env,
     ctx: ExecutionContext
   ): Promise<void> {
-    await runUpdate(env);
+    await Promise.all([runChannelNameUpdate(env), runInteractions(env)]);
   },
   async fetch(request: Request, env: Env, ctx: FetchEvent): Promise<Response> {
     if (env.PUSH_KEY && request.url.includes(env.PUSH_KEY)) {
-      ctx.waitUntil(runUpdate(env));
+      ctx.waitUntil(runChannelNameUpdate(env));
       return new Response("ok");
     } else {
       const parts = request.url.split("/");
@@ -118,6 +121,16 @@ export default {
 
       if (request.url.includes("/x/bump-update-time")) {
         await doUpdateTime(env.BOT_TOKEN);
+        return new Response("ok");
+      }
+
+      if (request.url.includes("/x/test-message")) {
+        await upsertMessage(
+          env.BOT_TOKEN,
+          "997704124416151622",
+          "998448233481240606",
+          serverStatsEmbed(await getAllPopulations(serverID, platformConfig))
+        );
         return new Response("ok");
       }
 
