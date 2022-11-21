@@ -12,6 +12,7 @@ Currently it changes some channel names in Discord based on server pop, continen
 - [Voidwell](https://voidwell.com) (population)
 - [ps2.fisu.pw](https://ps2.fisu.pw) (population)
 - [wt.honu.pw](https://wt.honu.pw) (population)
+- [Genudine Saerro](https://saerro.harasse.rs) (population)
 
 ## Developing
 

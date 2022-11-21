@@ -78,6 +78,29 @@ const getHonuPopulation = async (
   };
 };
 
+const getSaerroPopulation = async (
+  worldID: string,
+  platformConfig: PlatformConfig
+): Promise<Population<number>> => {
+  const res = await fetch(`https://saerro.harasse.rs/w/${worldID}`);
+
+  const data: {
+    total: number;
+    factions: {
+      vs: number;
+      nc: number;
+      tr: number;
+    };
+  } = await res.json();
+
+  return {
+    total: data.total,
+    nc: data.factions.nc,
+    tr: data.factions.tr,
+    vs: data.factions.vs,
+  };
+};
+
 export const getAllPopulations = async (
   worldID: string,
   platformConfig: PlatformConfig
@@ -85,6 +108,7 @@ export const getAllPopulations = async (
   average: number;
   fisu: number;
   honu: number;
+  saerro: number;
   voidwell: number;
   averages: { nc: number; tr: number; vs: number };
 }> => {
@@ -107,18 +131,25 @@ export const getAllPopulations = async (
       tr: -1,
       vs: -1,
     })),
+    getSaerroPopulation(worldID, platformConfig).catch(() => ({
+      total: -1,
+      nc: -1,
+      tr: -1,
+      vs: -1,
+    })),
   ]);
 
-  const [honu, voidwell, fisu] = values;
+  const [honu, voidwell, fisu, saerro] = values;
 
   // Both -1 and 0 are bad values.
   const workingValues = values.filter((v) => v.total > 0);
-  const factionWorkingValues = [honu, fisu].filter((v) => v.total > 0);
+  const factionWorkingValues = [honu, fisu, saerro].filter((v) => v.total > 0);
 
   return {
     honu: honu.total,
     voidwell: voidwell.total,
     fisu: fisu.total,
+    saerro: saerro.total,
     average: Math.floor(
       workingValues.reduce((a, b) => a + b.total, 0) / workingValues.length
     ),
