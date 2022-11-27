@@ -82,23 +82,49 @@ const getSaerroPopulation = async (
   worldID: string,
   platformConfig: PlatformConfig
 ): Promise<Population<number>> => {
-  const res = await fetch(`https://saerro.harasse.rs/w/${worldID}`);
+  const query = `{
+    world(id: "${worldID}") {
+      population
+      factionPopulation {
+        nc
+        tr
+        vs
+      }
+    }
+  }`;
+  const res = await fetch(
+    `https://saerro.harasse.rs/graphql?query=${encodeURIComponent(query)}`
+  );
+
+  if (res.status !== 200) {
+    console.log("res", await res.text());
+    throw new Error("Bad status code: " + res.status);
+  }
 
   const data: {
-    total: number;
-    factions: {
-      vs: number;
-      nc: number;
-      tr: number;
+    data: {
+      world: {
+        population: number;
+        factionPopulation: { nc: number; tr: number; vs: number };
+      };
     };
   } = await res.json();
 
+  const {
+    data: {
+      world: { population, factionPopulation },
+    },
+  } = data;
+
   return {
-    total: data.total,
-    nc: data.factions.nc,
-    tr: data.factions.tr,
-    vs: data.factions.vs,
+    total: population,
+    ...factionPopulation,
   };
+};
+
+const defaultAndLog = (which: string) => (e: Error) => {
+  console.error("Error fetching population from", which, "=>", e);
+  return { total: -1, nc: -1, tr: -1, vs: -1 };
 };
 
 export const getAllPopulations = async (
@@ -113,30 +139,12 @@ export const getAllPopulations = async (
   averages: { nc: number; tr: number; vs: number };
 }> => {
   const values = await Promise.all([
-    getHonuPopulation(worldID, platformConfig).catch(() => ({
-      total: -1,
-      nc: -1,
-      tr: -1,
-      vs: -1,
-    })),
-    getVoidwellPopulation(worldID, platformConfig).catch(() => ({
-      total: -1,
-      nc: -1,
-      tr: -1,
-      vs: -1,
-    })),
-    getFisuPopulation(worldID, platformConfig).catch(() => ({
-      total: -1,
-      nc: -1,
-      tr: -1,
-      vs: -1,
-    })),
-    getSaerroPopulation(worldID, platformConfig).catch(() => ({
-      total: -1,
-      nc: -1,
-      tr: -1,
-      vs: -1,
-    })),
+    getHonuPopulation(worldID, platformConfig).catch(defaultAndLog("honu")),
+    getVoidwellPopulation(worldID, platformConfig).catch(
+      defaultAndLog("voidwell")
+    ),
+    getFisuPopulation(worldID, platformConfig).catch(defaultAndLog("fisu")),
+    getSaerroPopulation(worldID, platformConfig).catch(defaultAndLog("saerro")),
   ]);
 
   const [honu, voidwell, fisu, saerro] = values;
