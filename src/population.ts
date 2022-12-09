@@ -82,16 +82,7 @@ const getSaerroPopulation = async (
   worldID: string,
   platformConfig: PlatformConfig
 ): Promise<Population<number>> => {
-  const query = `{
-    world(id: "${worldID}") {
-      population
-      factionPopulation {
-        nc
-        tr
-        vs
-      }
-    }
-  }`;
+  const query = `{ world(by: { id: ${worldID} }) { population { total nc tr vs } } }`;
   const res = await fetch(
     `https://saerro.harasse.rs/graphql?query=${encodeURIComponent(query)}`
   );
@@ -104,22 +95,12 @@ const getSaerroPopulation = async (
   const data: {
     data: {
       world: {
-        population: number;
-        factionPopulation: { nc: number; tr: number; vs: number };
+        population: { total: number; nc: number; tr: number; vs: number };
       };
     };
   } = await res.json();
 
-  const {
-    data: {
-      world: { population, factionPopulation },
-    },
-  } = data;
-
-  return {
-    total: population,
-    ...factionPopulation,
-  };
+  return data.data.world.population;
 };
 
 const defaultAndLog = (which: string) => (e: Error) => {
