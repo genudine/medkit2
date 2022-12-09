@@ -24,6 +24,7 @@ import {
   serverListingPopulation,
   serverStatsEmbed,
 } from "./strings";
+import { QueueMessage } from "./types";
 
 export interface Env {
   SERVICE_ID: string;
@@ -31,11 +32,11 @@ export interface Env {
   PUSH_KEY: string;
 
   CONFIG: KVNamespace;
+  STREAM: Queue<QueueMessage>;
 }
 
-const runChannelNameUpdate = async (env: Env) => {
+const runChannelNameUpdate = async (env: Env, onlyUpdate?: string[]) => {
   const serviceID = env.SERVICE_ID;
-  const botToken = env.BOT_TOKEN;
 
   for (const [serverID, channelIDs] of Object.entries(serverMappings)) {
     const platformConfig = getPlatformConfig(serverID);
@@ -52,17 +53,35 @@ const runChannelNameUpdate = async (env: Env) => {
 
     // Update the server listings
     for (const [popChannel, contChannel] of channelIDs) {
-      await updateChannelName(botToken, popChannel, popListing);
+      const shouldUpdatePop = !onlyUpdate || onlyUpdate.includes(popChannel);
+      const shouldUpdateCont = !onlyUpdate || onlyUpdate.includes(contChannel);
+
+      shouldUpdatePop &&
+        env.STREAM.send({
+          event: "channel_name_update",
+          channel_id: popChannel,
+          channel_name: popListing,
+        }).then(() =>
+          console.log("Sent to queue =>", { popChannel, popListing })
+        );
+
       if (contChannel) {
-        await updateChannelName(botToken, contChannel, contListing);
+        shouldUpdateCont &&
+          env.STREAM.send({
+            event: "channel_name_update",
+            channel_id: contChannel,
+            channel_name: contListing,
+          }).then(() =>
+            console.log("Sent to queue =>", { contChannel, contListing })
+          );
       }
     }
   }
 
-  await doUpdateTime(botToken);
+  await doUpdateTime(env);
 };
 
-const doUpdateTime = async (botToken: string) => {
+const doUpdateTime = async (env: Env) => {
   // Send update time
   const humanDate = new Date().toLocaleString("en-GB", {
     timeZone: "UTC",
@@ -70,10 +89,15 @@ const doUpdateTime = async (botToken: string) => {
     timeStyle: "short",
   });
   const updateTimeText = `@ ${humanDate} UTC`;
-  console.log("Sending", { updateTimeText });
 
   for (const channelID of updateTimeMappings) {
-    await updateChannelName(botToken, channelID, updateTimeText);
+    env.STREAM.send({
+      event: "channel_name_update",
+      channel_id: channelID,
+      channel_name: updateTimeText,
+    }).then(() =>
+      console.log("Sent to queue =>", { channelID, updateTimeText })
+    );
   }
 };
 
@@ -87,9 +111,26 @@ export default {
   ): Promise<void> {
     await Promise.all([runChannelNameUpdate(env), runInteractions(env)]);
   },
+  async queue(batch: MessageBatch<QueueMessage>, env: Env): Promise<void> {
+    for (const { body } of batch.messages) {
+      if (body.event === "channel_name_update") {
+        try {
+          await updateChannelName(
+            env.BOT_TOKEN,
+            body.channel_id,
+            body.channel_name
+          );
+        } catch (e) {
+          console.error("channel_name_update FAILED => ", { body, e });
+        }
+      }
+    }
+  },
   async fetch(request: Request, env: Env, ctx: FetchEvent): Promise<Response> {
     if (env.PUSH_KEY && request.url.includes(env.PUSH_KEY)) {
-      ctx.waitUntil(runChannelNameUpdate(env));
+      const onlyUpdate =
+        new URL(request.url).searchParams.getAll("channels") || undefined;
+      ctx.waitUntil(runChannelNameUpdate(env, onlyUpdate));
       return new Response("ok");
     } else {
       const parts = request.url.split("/");
@@ -120,7 +161,7 @@ export default {
       }
 
       if (request.url.includes("/x/bump-update-time")) {
-        await doUpdateTime(env.BOT_TOKEN);
+        await doUpdateTime(env);
         return new Response("ok");
       }
 

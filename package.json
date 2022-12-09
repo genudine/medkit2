@@ -13,12 +13,12 @@
     "start": "wrangler dev --local"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^3.14.1",
-    "node-fetch": "^3.2.8",
-    "prettier": "^2.7.1",
-    "prettier-plugin-organize-imports": "^3.0.1",
-    "sharp": "^0.30.7",
-    "typescript": "^4.7.4",
-    "wrangler": "^2.0.22"
+    "@cloudflare/workers-types": "^4.20221111.1",
+    "node-fetch": "^3.3.0",
+    "prettier": "^2.8.1",
+    "prettier-plugin-organize-imports": "^3.2.1",
+    "sharp": "^0.31.2",
+    "typescript": "^4.9.4",
+    "wrangler": "^2.6.1"
   }
 }

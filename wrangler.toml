@@ -13,3 +13,12 @@ SERVICE_ID = "medkit2"
 binding = "CONFIG"
 id = "e247a266d6f343e4a678a9632f1b14a9"
 preview_id = "56eafbc0347642ed8d265995f9be5d07"
+
+[[queues.producers]]
+queue = "medkit2-stream"
+binding = "STREAM"
+
+[[queues.consumers]]
+queue = "medkit2-stream"
+max_batch_size = 10
+max_batch_timeout = 5

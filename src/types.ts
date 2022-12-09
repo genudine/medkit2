@@ -13,3 +13,9 @@ export enum Continent {
   Esamir = 8,
   Oshur = 344,
 }
+
+export type QueueMessage = {
+  event: "channel_name_update";
+  channel_id: string;
+  channel_name: string;
+};
