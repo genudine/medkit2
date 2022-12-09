@@ -91,7 +91,7 @@ const doUpdateTime = async (env: Env) => {
   const updateTimeText = `@ ${humanDate} UTC`;
 
   for (const channelID of updateTimeMappings) {
-    env.STREAM.send({
+    await env.STREAM.send({
       event: "channel_name_update",
       channel_id: channelID,
       channel_name: updateTimeText,
