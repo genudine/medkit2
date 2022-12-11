@@ -48,6 +48,11 @@ export const getLockStates = async (
     );
   });
 
+  // Esamir is always locked on PlayStation.
+  if (worldID === "1000" || worldID === "2000") {
+    lockStates[Continent.Esamir] = true;
+  }
+
   return lockStates;
 };
 
