@@ -84,7 +84,7 @@ const getSaerroPopulation = async (
 ): Promise<Population<number>> => {
   const query = `{ world(by: { id: ${worldID} }) { population { total nc tr vs } } }`;
   const res = await fetch(
-    `https://saerro.harasse.rs/graphql?query=${encodeURIComponent(query)}`
+    `https://saerro.ps2.live/graphql?query=${encodeURIComponent(query)}`
   );
 
   if (res.status !== 200) {
