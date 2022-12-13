@@ -29,6 +29,7 @@ export const serverMappings = {
 
 export const updateTimeMappings = [
   "997953082669412482", // PS2 Discord
+  "1052356228128460932", // PCD
 ];
 
 export const platformConfig = {
