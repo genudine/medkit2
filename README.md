@@ -9,10 +9,7 @@ Currently it changes some channel names in Discord based on server pop, continen
 ## Upstream APIs in use
 
 - [PS2 Census API](https://census.daybreakgames.com/) (alerts, continent locks, event data)
-- [Voidwell](https://voidwell.com) (population)
-- [ps2.fisu.pw](https://ps2.fisu.pw) (population)
-- [wt.honu.pw](https://wt.honu.pw) (population)
-- [Genudine Saerro](https://saerro.harasse.rs) (population)
+- [agg.ps2.live/population](https://agg.ps2.live/population) (population)
 
 ## Developing
 
@@ -28,9 +25,7 @@ Currently it changes some channel names in Discord based on server pop, continen
 
 [See code](./src/population.ts)
 
-Pulls data from 3 reliable sources (Voidwell, fisu, and honu) and averages them due to inconsistencies. Usually one outlier exists, so this smooths the curve. Get raw outputs with `/x/debug-populations/<serverID>`.
-
-If any one API fails, it's removed from the count.
+Pulls data from [our aggregator API](https://github.com/genudine/agg-population), which averages Saerro, Voidwell, Honu, and Fisu populations.
 
 ### Continent Locks
 

@@ -16,14 +16,10 @@ import {
   serverMappings,
   updateTimeMappings,
 } from "./config";
-import { updateChannelName, upsertMessage } from "./discord";
+import { updateChannelName } from "./discord";
 import { getLockStates } from "./locks";
 import { getAllPopulations } from "./population";
-import {
-  serverListingContinents,
-  serverListingPopulation,
-  serverStatsEmbed,
-} from "./strings";
+import { serverListingContinents, serverListingPopulation } from "./strings";
 import { QueueMessage } from "./types";
 
 export interface Env {
@@ -168,15 +164,15 @@ export default {
         return new Response("ok");
       }
 
-      if (request.url.includes("/x/test-message")) {
-        await upsertMessage(
-          env.BOT_TOKEN,
-          "997704124416151622",
-          "998448233481240606",
-          serverStatsEmbed(await getAllPopulations(serverID, platformConfig))
-        );
-        return new Response("ok");
-      }
+      // if (request.url.includes("/x/test-message")) {
+      //   await upsertMessage(
+      //     env.BOT_TOKEN,
+      //     "997704124416151622",
+      //     "998448233481240606",
+      //     serverStatsEmbed(await getAllPopulations())
+      //   );
+      //   return new Response("ok");
+      // }
 
       return new Response("not ok", { status: 400 });
     }
