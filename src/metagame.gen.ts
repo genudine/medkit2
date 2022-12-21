@@ -53,4 +53,9 @@ export const metagameIDs = {
   "226": AlertType.Conquest,
   "232": AlertType.Air,
   "233": AlertType.Max,
+  "236": AlertType.SuddenDeath,
+  "237": AlertType.SuddenDeath,
+  "238": AlertType.SuddenDeath,
+  "239": AlertType.SuddenDeath,
+  "240": AlertType.SuddenDeath,
 };

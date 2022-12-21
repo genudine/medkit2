@@ -18,7 +18,7 @@ import {
 } from "./config";
 import { updateChannelName, upsertMessage } from "./discord";
 import { getLockStates } from "./locks";
-import { getAllPopulations, getPopulation } from "./population";
+import { getAllPopulations } from "./population";
 import {
   serverListingContinents,
   serverListingPopulation,
@@ -37,16 +37,19 @@ export interface Env {
 
 const runChannelNameUpdate = async (env: Env, onlyUpdate?: string[]) => {
   const serviceID = env.SERVICE_ID;
+  const populations = await getAllPopulations();
 
   for (const [serverID, channelIDs] of Object.entries(serverMappings)) {
     const platformConfig = getPlatformConfig(serverID);
 
-    // Get population, alerts, and locks.
-    const population = await getPopulation(serverID, platformConfig);
+    // Get alerts and locks.
     const alerts = await getAlerts(serviceID, serverID, platformConfig);
     const locks = await getLockStates(serviceID, serverID, platformConfig);
 
-    const popListing = serverListingPopulation(serverID, population);
+    const popListing = serverListingPopulation(
+      serverID,
+      populations.find((p) => p.id === +serverID)?.average || 0
+    );
     const contListing = serverListingContinents(serverID, alerts, locks);
 
     console.log("Sending", { popListing, contListing });
@@ -138,7 +141,7 @@ export default {
       const platformConfig = getPlatformConfig(serverID);
 
       if (request.url.includes("/x/debug-population")) {
-        const population = await getAllPopulations(serverID, platformConfig);
+        const population = await getAllPopulations();
         return new Response(JSON.stringify(population));
       }
 
