@@ -1,13 +1,10 @@
 name = "medkit2"
 main = "src/index.ts"
 compatibility_date = "2022-07-16"
-usage_model = "unbound"
+usage_model = "bundled"
 
 [triggers]
 crons = [ "*/10 * * * *" ]
-
-[vars]
-SERVICE_ID = "medkit2"
 
 [[kv_namespaces]]
 binding = "CONFIG"
