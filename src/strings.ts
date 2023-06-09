@@ -1,7 +1,6 @@
-import { Alerts } from "./alerts";
 import { emojiBarGraph } from "./emoji-bar-graph";
 import { emojis } from "./emojis.gen";
-import { LockStates } from "./locks";
+import { Metagame } from "./metagame";
 import { getAllPopulations } from "./population";
 import { AlertType, Continent } from "./types";
 
@@ -30,6 +29,10 @@ const alertTypeEmoji = {
   [AlertType.Air]: "✈️",
   [AlertType.SuddenDeath]: "💀",
   [AlertType.None]: " ",
+  conquest: "🚨",
+  max: "🍔",
+  air: "✈️",
+  sudden_death: "💀",
 };
 
 export const serverListingPopulation = (
@@ -45,27 +48,20 @@ export const serverListingPopulation = (
   return `${serverName}｜${population || 0} online`;
 };
 
-export const serverListingContinents = (
-  serverId: string,
-  alerts: Alerts,
-  lockStates: LockStates
-) => {
-  const continents = Object.keys(continentNames)
-    .filter((id) => lockStates[Number(id) as keyof typeof lockStates] === false)
-    .sort((a, b) => {
-      if (alerts[Number(a) as keyof typeof alerts] === AlertType.None) {
-        return 1;
-      }
+export const serverListingContinents = (metagame: Metagame) => {
+  const continents = metagame.zones.reduce<string[]>((acc, zone) => {
+    if (zone.locked) {
+      return acc;
+    }
 
-      return -1;
-    })
-    .map((id) => {
-      const intID = Number(id);
-      return `${alertTypeEmoji[alerts[intID as keyof typeof alerts]]}${
-        continentNames[intID as keyof typeof continentNames]
-      }`;
-    });
+    const continentName =
+      continentNames[zone.id as keyof typeof continentNames];
+    const alertType = zone.alert?.alert_type;
 
+    const alertEmoji =
+      alertTypeEmoji[alertType as keyof typeof alertTypeEmoji] || " ";
+    return [...acc, `${alertEmoji} ${continentName}`];
+  }, []);
   return `···${continents.join(",")}`;
 };
 

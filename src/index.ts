@@ -10,14 +10,13 @@
  * Learn more at https://developers.cloudflare.com/workers/runtime-apis/scheduled-event/
  */
 
-import { getAlerts } from "./alerts";
 import {
   getPlatformConfig,
   serverMappings,
   updateTimeMappings,
 } from "./config";
 import { updateChannelName } from "./discord";
-import { getLockStates } from "./locks";
+import { getMetagame } from "./metagame";
 import { getAllPopulations } from "./population";
 import { serverListingContinents, serverListingPopulation } from "./strings";
 import { QueueMessage } from "./types";
@@ -32,21 +31,21 @@ export interface Env {
 }
 
 const runChannelNameUpdate = async (env: Env, onlyUpdate?: string[]) => {
-  const serviceID = env.SERVICE_ID;
   const populations = await getAllPopulations();
+  const metagame = await getMetagame();
 
   for (const [serverID, channelIDs] of Object.entries(serverMappings)) {
-    const platformConfig = getPlatformConfig(serverID);
-
-    // Get alerts and locks.
-    const alerts = await getAlerts(serviceID, serverID, platformConfig);
-    const locks = await getLockStates(serviceID, serverID, platformConfig);
+    const metagameWorld = metagame.find((m) => m.id === +serverID);
+    if (!metagameWorld) {
+      console.log("No metagame world entry found for", serverID);
+      continue;
+    }
 
     const popListing = serverListingPopulation(
       serverID,
       populations.find((p) => p.id === +serverID)?.average || 0
     );
-    const contListing = serverListingContinents(serverID, alerts, locks);
+    const contListing = serverListingContinents(metagameWorld);
 
     console.log("Sending", { popListing, contListing });
 
@@ -141,22 +140,31 @@ export default {
         return new Response(JSON.stringify(population));
       }
 
-      if (request.url.includes("/x/debug-alerts")) {
-        const alerts = await getAlerts(
-          env.SERVICE_ID,
-          serverID,
-          platformConfig
-        );
-        return new Response(JSON.stringify(alerts));
-      }
+      if (request.url.includes("/x/debug-messages")) {
+        const populations = await getAllPopulations();
+        const metagame = await getMetagame();
 
-      if (request.url.includes("/x/debug-locks")) {
-        const locks = await getLockStates(
-          env.SERVICE_ID,
-          serverID,
-          platformConfig
+        const worlds = [1, 10, 13, 17, 19, 40, 1000, 2000];
+
+        return new Response(
+          JSON.stringify(
+            worlds.map((id) => {
+              const metagameWorld = metagame.find((m) => m.id === id);
+              const contListing = metagameWorld
+                ? serverListingContinents(metagameWorld)
+                : "METAGAME_FAILED";
+              const popListing = serverListingPopulation(
+                String(id),
+                populations.find((p) => p.id === id)?.average || 0
+              );
+              return {
+                id,
+                popListing,
+                contListing,
+              };
+            })
+          )
         );
-        return new Response(JSON.stringify(locks));
       }
 
       if (request.url.includes("/x/bump-update-time")) {
