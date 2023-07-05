@@ -26,12 +26,12 @@ const continentNames = {
 const alertTypeEmoji = {
   [AlertType.Conquest]: "🚨",
   [AlertType.Max]: "🍔",
-  [AlertType.Air]: "✈️",
+  [AlertType.Air]: "🛫",
   [AlertType.SuddenDeath]: "💀",
   [AlertType.None]: " ",
   conquest: "🚨",
   max: "🍔",
-  air: "✈️",
+  air: "🛫",
   sudden_death: "💀",
 };
 

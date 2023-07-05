@@ -31,8 +31,10 @@ export interface Env {
 }
 
 const runChannelNameUpdate = async (env: Env, onlyUpdate?: string[]) => {
-  const populations = await getAllPopulations();
-  const metagame = await getMetagame();
+  const [populations, metagame] = await Promise.all([
+    getAllPopulations(),
+    getMetagame(),
+  ]);
 
   for (const [serverID, channelIDs] of Object.entries(serverMappings)) {
     const metagameWorld = metagame.find((m) => m.id === +serverID);
@@ -141,8 +143,10 @@ export default {
       }
 
       if (request.url.includes("/x/debug-messages")) {
-        const populations = await getAllPopulations();
-        const metagame = await getMetagame();
+        const [populations, metagame] = await Promise.all([
+          getAllPopulations(),
+          getMetagame(),
+        ]);
 
         const worlds = [1, 10, 13, 17, 19, 40, 1000, 2000];
 
