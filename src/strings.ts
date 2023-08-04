@@ -33,6 +33,7 @@ const alertTypeEmoji = {
   max: "🍔",
   air: "🛫",
   sudden_death: "💀",
+  unstable_meltdown: "☢️",
 };
 
 export const serverListingPopulation = (
